@@ -1,0 +1,895 @@
+DROP TABLE IF EXISTS customer_purchases;
+
+-- Create simple table with TEXT fields to avoid data type issues
+CREATE TABLE customer_purchases (
+    customer_reference_id TEXT,
+    item_purchased TEXT,
+    purchase_amount_usd TEXT,
+    date_purchase TEXT,
+    review_rating TEXT,
+    payment_method TEXT
+);
+
+ALTER TABLE customer_purchases
+  ALTER COLUMN purchase_amount_usd TYPE NUMERIC
+    USING REPLACE(purchase_amount_usd, '$', '')::NUMERIC,
+  ALTER COLUMN date_purchase TYPE DATE
+    USING TO_DATE(date_purchase, 'DD-MM-YYYY'),
+  ALTER COLUMN review_rating TYPE NUMERIC
+    USING review_rating::NUMERIC;
+
+SELECT *
+FROM customer_purchases
+
+/* 
+Questions:
+Trend Forecasting: Identifying seasonal trends in fashion retail.
+How?
+
+🕒 Time-Based Trend Questions
+Which months or seasons have the highest and lowest sales overall?
+→ Helps identify peak vs. off-peak periods.
+
+How do monthly sales trends differ by product category (e.g., tops, pants, accessories)?
+→ Shows seasonal product preferences.
+
+Is there a recurring pattern in sales over the years during the same months (e.g., is December always high)?
+→ Detects seasonality and cyclicality.
+
+👕 Product-Specific Trend Questions
+Which fashion items consistently perform best during specific seasons?
+→ Helps link items with seasons.
+
+Are there new product categories emerging in popularity over time?
+→ Forecasts growing trends.
+
+Do discounts or promotions affect sales spikes during certain months?
+→ Understands price sensitivity and its seasonal impact.
+
+🌍 Customer & Location-Based Trends
+Do different regions or store locations exhibit different seasonal trends?
+→ Important if your dataset contains location-based sales.
+
+What are the most frequently purchased combinations of products per season?
+→ Insights into styling trends or seasonal outfits.
+
+📈 Forecasting Focused Questions
+Can we use previous seasonal sales data to forecast future sales for the next quarter?
+→ Leads into time series modeling.
+
+What is the expected sales growth per category based on past seasonal performance?
+→ Helps with inventory and marketing planning.
+Which months or seasons have the highest and lowest sales overall?
+Spring/Summer (SS):
+Typically runs from January to June, featuring lighter fabrics, brighter colors, and clothing suitable for warmer weather.
+Fall/Winter (AW):
+Runs from July to December, showcasing heavier fabrics, darker colors, and clothing designed for colder temperatures.
+Resort/Cruise:
+Generally presented in November-January, this collection features vacation-ready clothing and is often seen during the resort season.
+Pre-Fall:
+May-July, a collection that bridges the gap between Spring/Summer and Fall/Winter with lighter takes on fall trends.
+
+*/
+
+--Which months have the highest and lowest sales overall?
+
+SELECT EXTRACT(MONTH from date_purchase) AS month, SUM(purchase_amount_usd) AS total_sales
+FROM customer_purchases
+GROUP BY EXTRACT(MONTH from date_purchase)
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+-- it is seen that december has the highest sales while September has the lowest 
+-- top 3 highest: Dec, May, April
+-- top 3 lowest: Sept, Jan, Oct
+
+--How do monthly sales trends differ by product category (e.g., tops, pants, accessories)?
+
+SELECT EXTRACT(MONTH from date_purchase) AS month, SUM(purchase_amount_usd) AS total_sales, item_purchased
+FROM customer_purchases
+GROUP BY EXTRACT(MONTH from date_purchase), item_purchased
+HAVING SUM(purchase_amount_usd) IS NOT NULL
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+SELECT DISTINCT item_purchased
+FROM customer_purchases
+
+--Tops
+SELECT EXTRACT(MONTH from date_purchase) AS month, SUM(purchase_amount_usd) AS total_sales,
+
+  CASE
+  WHEN item_purchased = 'Jacket' THEN 'Outwear'
+  WHEN item_purchased = 'Trench Coat' THEN 'Outwear' 
+  WHEN item_purchased = 'Coat' THEN 'Outwear'
+  WHEN item_purchased = 'Raincoat' THEN 'Outwear'
+  WHEN item_purchased = 'Blazer' THEN 'Outwear'
+  WHEN item_purchased = 'Poncho' THEN 'Outwear'
+  WHEN item_purchased = 'Kimono' THEN 'Outwear'
+  WHEN item_purchased = 'T-shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tank Top' THEN 'Tops'
+  WHEN item_purchased = 'Blouse' THEN 'Tops'
+  WHEN item_purchased = 'Flannel Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Polo Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tunic' THEN 'Tops'
+  WHEN item_purchased = 'Camisole' THEN 'Tops'
+  WHEN item_purchased = 'Sweater' THEN 'Tops'
+  WHEN item_purchased = 'Hoodie' THEN 'Tops'
+  WHEN item_purchased = 'Cardigan' THEN 'Tops'
+  WHEN item_purchased = 'Vest' THEN 'Tops'
+  WHEN item_purchased = 'Jeans' THEN 'Bottoms'
+  WHEN item_purchased = 'Pants' THEN 'Bottoms'
+  WHEN item_purchased = 'Trousers' THEN 'Bottoms'
+  WHEN item_purchased = 'Shorts' THEN 'Bottoms'
+  WHEN item_purchased = 'Leggings' THEN 'Bottoms'
+  WHEN item_purchased = 'Skirt' THEN 'Bottoms'
+  WHEN item_purchased = 'Dress' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Jumpsuit' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Romper' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Overalls' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Pajamas' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Onesie' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Sneakers' THEN 'Footwear'
+  WHEN item_purchased = 'Boots' THEN 'Footwear'
+  WHEN item_purchased = 'Sandals' THEN 'Footwear'
+  WHEN item_purchased = 'Flip-Flops' THEN 'Footwear'
+  WHEN item_purchased = 'Loafers' THEN 'Footwear'
+  WHEN item_purchased = 'Slippers' THEN 'Footwear'
+  WHEN item_purchased = 'Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Sun Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Gloves' THEN 'Accessories'
+  WHEN item_purchased = 'Scarf' THEN 'Accessories'
+  WHEN item_purchased = 'Tie' THEN 'Accessories'
+  WHEN item_purchased = 'Bowtie' THEN 'Accessories'
+  WHEN item_purchased = 'Sunglasses' THEN 'Accessories'
+  WHEN item_purchased = 'Belt' THEN 'Accessories'
+  WHEN item_purchased = 'Umbrella' THEN 'Accessories'
+  WHEN item_purchased = 'Handbag' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Backpack' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Wallet' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Swimsuit' THEN 'Swimwear'
+  ELSE 'no category'
+END AS product_category
+FROM customer_purchases
+WHERE item_purchased IS NOT NULL AND purchase_amount_usd IS NOT NULL AND 
+  CASE
+  WHEN item_purchased = 'Jacket' THEN 'Outwear'
+  WHEN item_purchased = 'Trench Coat' THEN 'Outwear' 
+  WHEN item_purchased = 'Coat' THEN 'Outwear'
+  WHEN item_purchased = 'Raincoat' THEN 'Outwear'
+  WHEN item_purchased = 'Blazer' THEN 'Outwear'
+  WHEN item_purchased = 'Poncho' THEN 'Outwear'
+  WHEN item_purchased = 'Kimono' THEN 'Outwear'
+  WHEN item_purchased = 'T-shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tank Top' THEN 'Tops'
+  WHEN item_purchased = 'Blouse' THEN 'Tops'
+  WHEN item_purchased = 'Flannel Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Polo Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tunic' THEN 'Tops'
+  WHEN item_purchased = 'Camisole' THEN 'Tops'
+  WHEN item_purchased = 'Sweater' THEN 'Tops'
+  WHEN item_purchased = 'Hoodie' THEN 'Tops'
+  WHEN item_purchased = 'Cardigan' THEN 'Tops'
+  WHEN item_purchased = 'Vest' THEN 'Tops'
+  WHEN item_purchased = 'Jeans' THEN 'Bottoms'
+  WHEN item_purchased = 'Pants' THEN 'Bottoms'
+  WHEN item_purchased = 'Trousers' THEN 'Bottoms'
+  WHEN item_purchased = 'Shorts' THEN 'Bottoms'
+  WHEN item_purchased = 'Leggings' THEN 'Bottoms'
+  WHEN item_purchased = 'Skirt' THEN 'Bottoms'
+  WHEN item_purchased = 'Dress' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Jumpsuit' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Romper' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Overalls' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Pajamas' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Onesie' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Sneakers' THEN 'Footwear'
+  WHEN item_purchased = 'Boots' THEN 'Footwear'
+  WHEN item_purchased = 'Sandals' THEN 'Footwear'
+  WHEN item_purchased = 'Flip-Flops' THEN 'Footwear'
+  WHEN item_purchased = 'Loafers' THEN 'Footwear'
+  WHEN item_purchased = 'Slippers' THEN 'Footwear'
+  WHEN item_purchased = 'Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Sun Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Gloves' THEN 'Accessories'
+  WHEN item_purchased = 'Scarf' THEN 'Accessories'
+  WHEN item_purchased = 'Tie' THEN 'Accessories'
+  WHEN item_purchased = 'Bowtie' THEN 'Accessories'
+  WHEN item_purchased = 'Sunglasses' THEN 'Accessories'
+  WHEN item_purchased = 'Belt' THEN 'Accessories'
+  WHEN item_purchased = 'Umbrella' THEN 'Accessories'
+  WHEN item_purchased = 'Handbag' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Backpack' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Wallet' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Swimsuit' THEN 'Swimwear'
+  ELSE 'no category'
+END = 'Tops'
+GROUP BY product_category, EXTRACT(MONTH from date_purchase)
+ORDER BY SUM(purchase_amount_usd) DESC
+
+-- Peak December 15394 and Lowest is September 4329
+
+
+--Bottoms
+SELECT EXTRACT(MONTH from date_purchase) AS month, SUM(purchase_amount_usd) AS total_sales,
+
+  CASE
+  WHEN item_purchased = 'Jacket' THEN 'Outwear'
+  WHEN item_purchased = 'Trench Coat' THEN 'Outwear' 
+  WHEN item_purchased = 'Coat' THEN 'Outwear'
+  WHEN item_purchased = 'Raincoat' THEN 'Outwear'
+  WHEN item_purchased = 'Blazer' THEN 'Outwear'
+  WHEN item_purchased = 'Poncho' THEN 'Outwear'
+  WHEN item_purchased = 'Kimono' THEN 'Outwear'
+  WHEN item_purchased = 'T-shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tank Top' THEN 'Tops'
+  WHEN item_purchased = 'Blouse' THEN 'Tops'
+  WHEN item_purchased = 'Flannel Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Polo Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tunic' THEN 'Tops'
+  WHEN item_purchased = 'Camisole' THEN 'Tops'
+  WHEN item_purchased = 'Sweater' THEN 'Tops'
+  WHEN item_purchased = 'Hoodie' THEN 'Tops'
+  WHEN item_purchased = 'Cardigan' THEN 'Tops'
+  WHEN item_purchased = 'Vest' THEN 'Tops'
+  WHEN item_purchased = 'Jeans' THEN 'Bottoms'
+  WHEN item_purchased = 'Pants' THEN 'Bottoms'
+  WHEN item_purchased = 'Trousers' THEN 'Bottoms'
+  WHEN item_purchased = 'Shorts' THEN 'Bottoms'
+  WHEN item_purchased = 'Leggings' THEN 'Bottoms'
+  WHEN item_purchased = 'Skirt' THEN 'Bottoms'
+  WHEN item_purchased = 'Dress' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Jumpsuit' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Romper' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Overalls' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Pajamas' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Onesie' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Sneakers' THEN 'Footwear'
+  WHEN item_purchased = 'Boots' THEN 'Footwear'
+  WHEN item_purchased = 'Sandals' THEN 'Footwear'
+  WHEN item_purchased = 'Flip-Flops' THEN 'Footwear'
+  WHEN item_purchased = 'Loafers' THEN 'Footwear'
+  WHEN item_purchased = 'Slippers' THEN 'Footwear'
+  WHEN item_purchased = 'Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Sun Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Gloves' THEN 'Accessories'
+  WHEN item_purchased = 'Scarf' THEN 'Accessories'
+  WHEN item_purchased = 'Tie' THEN 'Accessories'
+  WHEN item_purchased = 'Bowtie' THEN 'Accessories'
+  WHEN item_purchased = 'Sunglasses' THEN 'Accessories'
+  WHEN item_purchased = 'Belt' THEN 'Accessories'
+  WHEN item_purchased = 'Umbrella' THEN 'Accessories'
+  WHEN item_purchased = 'Handbag' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Backpack' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Wallet' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Swimsuit' THEN 'Swimwear'
+  ELSE 'no category'
+END AS product_category
+FROM customer_purchases
+WHERE item_purchased IS NOT NULL AND purchase_amount_usd IS NOT NULL AND 
+  CASE
+  WHEN item_purchased = 'Jacket' THEN 'Outwear'
+  WHEN item_purchased = 'Trench Coat' THEN 'Outwear' 
+  WHEN item_purchased = 'Coat' THEN 'Outwear'
+  WHEN item_purchased = 'Raincoat' THEN 'Outwear'
+  WHEN item_purchased = 'Blazer' THEN 'Outwear'
+  WHEN item_purchased = 'Poncho' THEN 'Outwear'
+  WHEN item_purchased = 'Kimono' THEN 'Outwear'
+  WHEN item_purchased = 'T-shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tank Top' THEN 'Tops'
+  WHEN item_purchased = 'Blouse' THEN 'Tops'
+  WHEN item_purchased = 'Flannel Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Polo Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tunic' THEN 'Tops'
+  WHEN item_purchased = 'Camisole' THEN 'Tops'
+  WHEN item_purchased = 'Sweater' THEN 'Tops'
+  WHEN item_purchased = 'Hoodie' THEN 'Tops'
+  WHEN item_purchased = 'Cardigan' THEN 'Tops'
+  WHEN item_purchased = 'Vest' THEN 'Tops'
+  WHEN item_purchased = 'Jeans' THEN 'Bottoms'
+  WHEN item_purchased = 'Pants' THEN 'Bottoms'
+  WHEN item_purchased = 'Trousers' THEN 'Bottoms'
+  WHEN item_purchased = 'Shorts' THEN 'Bottoms'
+  WHEN item_purchased = 'Leggings' THEN 'Bottoms'
+  WHEN item_purchased = 'Skirt' THEN 'Bottoms'
+  WHEN item_purchased = 'Dress' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Jumpsuit' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Romper' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Overalls' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Pajamas' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Onesie' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Sneakers' THEN 'Footwear'
+  WHEN item_purchased = 'Boots' THEN 'Footwear'
+  WHEN item_purchased = 'Sandals' THEN 'Footwear'
+  WHEN item_purchased = 'Flip-Flops' THEN 'Footwear'
+  WHEN item_purchased = 'Loafers' THEN 'Footwear'
+  WHEN item_purchased = 'Slippers' THEN 'Footwear'
+  WHEN item_purchased = 'Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Sun Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Gloves' THEN 'Accessories'
+  WHEN item_purchased = 'Scarf' THEN 'Accessories'
+  WHEN item_purchased = 'Tie' THEN 'Accessories'
+  WHEN item_purchased = 'Bowtie' THEN 'Accessories'
+  WHEN item_purchased = 'Sunglasses' THEN 'Accessories'
+  WHEN item_purchased = 'Belt' THEN 'Accessories'
+  WHEN item_purchased = 'Umbrella' THEN 'Accessories'
+  WHEN item_purchased = 'Handbag' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Backpack' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Wallet' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Swimsuit' THEN 'Swimwear'
+  ELSE 'no category'
+END = 'Bottoms'
+GROUP BY product_category, EXTRACT(MONTH from date_purchase)
+ORDER BY SUM(purchase_amount_usd) DESC
+
+--For Bottoms, its peak was May having 11562 total sales, its lowest is January with 2419 sales 
+
+
+-- One-Piece Outfits 
+SELECT EXTRACT(MONTH from date_purchase) AS month, SUM(purchase_amount_usd) AS total_sales,
+
+  CASE
+  WHEN item_purchased = 'Jacket' THEN 'Outwear'
+  WHEN item_purchased = 'Trench Coat' THEN 'Outwear' 
+  WHEN item_purchased = 'Coat' THEN 'Outwear'
+  WHEN item_purchased = 'Raincoat' THEN 'Outwear'
+  WHEN item_purchased = 'Blazer' THEN 'Outwear'
+  WHEN item_purchased = 'Poncho' THEN 'Outwear'
+  WHEN item_purchased = 'Kimono' THEN 'Outwear'
+  WHEN item_purchased = 'T-shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tank Top' THEN 'Tops'
+  WHEN item_purchased = 'Blouse' THEN 'Tops'
+  WHEN item_purchased = 'Flannel Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Polo Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tunic' THEN 'Tops'
+  WHEN item_purchased = 'Camisole' THEN 'Tops'
+  WHEN item_purchased = 'Sweater' THEN 'Tops'
+  WHEN item_purchased = 'Hoodie' THEN 'Tops'
+  WHEN item_purchased = 'Cardigan' THEN 'Tops'
+  WHEN item_purchased = 'Vest' THEN 'Tops'
+  WHEN item_purchased = 'Jeans' THEN 'Bottoms'
+  WHEN item_purchased = 'Pants' THEN 'Bottoms'
+  WHEN item_purchased = 'Trousers' THEN 'Bottoms'
+  WHEN item_purchased = 'Shorts' THEN 'Bottoms'
+  WHEN item_purchased = 'Leggings' THEN 'Bottoms'
+  WHEN item_purchased = 'Skirt' THEN 'Bottoms'
+  WHEN item_purchased = 'Dress' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Jumpsuit' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Romper' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Overalls' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Pajamas' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Onesie' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Sneakers' THEN 'Footwear'
+  WHEN item_purchased = 'Boots' THEN 'Footwear'
+  WHEN item_purchased = 'Sandals' THEN 'Footwear'
+  WHEN item_purchased = 'Flip-Flops' THEN 'Footwear'
+  WHEN item_purchased = 'Loafers' THEN 'Footwear'
+  WHEN item_purchased = 'Slippers' THEN 'Footwear'
+  WHEN item_purchased = 'Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Sun Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Gloves' THEN 'Accessories'
+  WHEN item_purchased = 'Scarf' THEN 'Accessories'
+  WHEN item_purchased = 'Tie' THEN 'Accessories'
+  WHEN item_purchased = 'Bowtie' THEN 'Accessories'
+  WHEN item_purchased = 'Sunglasses' THEN 'Accessories'
+  WHEN item_purchased = 'Belt' THEN 'Accessories'
+  WHEN item_purchased = 'Umbrella' THEN 'Accessories'
+  WHEN item_purchased = 'Handbag' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Backpack' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Wallet' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Swimsuit' THEN 'Swimwear'
+  ELSE 'no category'
+END AS product_category
+FROM customer_purchases
+WHERE item_purchased IS NOT NULL AND purchase_amount_usd IS NOT NULL AND 
+  CASE
+  WHEN item_purchased = 'Jacket' THEN 'Outwear'
+  WHEN item_purchased = 'Trench Coat' THEN 'Outwear' 
+  WHEN item_purchased = 'Coat' THEN 'Outwear'
+  WHEN item_purchased = 'Raincoat' THEN 'Outwear'
+  WHEN item_purchased = 'Blazer' THEN 'Outwear'
+  WHEN item_purchased = 'Poncho' THEN 'Outwear'
+  WHEN item_purchased = 'Kimono' THEN 'Outwear'
+  WHEN item_purchased = 'T-shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tank Top' THEN 'Tops'
+  WHEN item_purchased = 'Blouse' THEN 'Tops'
+  WHEN item_purchased = 'Flannel Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Polo Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tunic' THEN 'Tops'
+  WHEN item_purchased = 'Camisole' THEN 'Tops'
+  WHEN item_purchased = 'Sweater' THEN 'Tops'
+  WHEN item_purchased = 'Hoodie' THEN 'Tops'
+  WHEN item_purchased = 'Cardigan' THEN 'Tops'
+  WHEN item_purchased = 'Vest' THEN 'Tops'
+  WHEN item_purchased = 'Jeans' THEN 'Bottoms'
+  WHEN item_purchased = 'Pants' THEN 'Bottoms'
+  WHEN item_purchased = 'Trousers' THEN 'Bottoms'
+  WHEN item_purchased = 'Shorts' THEN 'Bottoms'
+  WHEN item_purchased = 'Leggings' THEN 'Bottoms'
+  WHEN item_purchased = 'Skirt' THEN 'Bottoms'
+  WHEN item_purchased = 'Dress' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Jumpsuit' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Romper' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Overalls' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Pajamas' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Onesie' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Sneakers' THEN 'Footwear'
+  WHEN item_purchased = 'Boots' THEN 'Footwear'
+  WHEN item_purchased = 'Sandals' THEN 'Footwear'
+  WHEN item_purchased = 'Flip-Flops' THEN 'Footwear'
+  WHEN item_purchased = 'Loafers' THEN 'Footwear'
+  WHEN item_purchased = 'Slippers' THEN 'Footwear'
+  WHEN item_purchased = 'Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Sun Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Gloves' THEN 'Accessories'
+  WHEN item_purchased = 'Scarf' THEN 'Accessories'
+  WHEN item_purchased = 'Tie' THEN 'Accessories'
+  WHEN item_purchased = 'Bowtie' THEN 'Accessories'
+  WHEN item_purchased = 'Sunglasses' THEN 'Accessories'
+  WHEN item_purchased = 'Belt' THEN 'Accessories'
+  WHEN item_purchased = 'Umbrella' THEN 'Accessories'
+  WHEN item_purchased = 'Handbag' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Backpack' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Wallet' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Swimsuit' THEN 'Swimwear'
+  ELSE 'no category'
+END = 'One-Piece Outfits'
+GROUP BY product_category, EXTRACT(MONTH from date_purchase)
+ORDER BY SUM(purchase_amount_usd) DESC
+
+-- Peak December with 9486 Lowest February 1895
+
+-- Footwear
+SELECT EXTRACT(MONTH from date_purchase) AS month, SUM(purchase_amount_usd) AS total_sales,
+
+  CASE
+  WHEN item_purchased = 'Jacket' THEN 'Outwear'
+  WHEN item_purchased = 'Trench Coat' THEN 'Outwear' 
+  WHEN item_purchased = 'Coat' THEN 'Outwear'
+  WHEN item_purchased = 'Raincoat' THEN 'Outwear'
+  WHEN item_purchased = 'Blazer' THEN 'Outwear'
+  WHEN item_purchased = 'Poncho' THEN 'Outwear'
+  WHEN item_purchased = 'Kimono' THEN 'Outwear'
+  WHEN item_purchased = 'T-shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tank Top' THEN 'Tops'
+  WHEN item_purchased = 'Blouse' THEN 'Tops'
+  WHEN item_purchased = 'Flannel Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Polo Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tunic' THEN 'Tops'
+  WHEN item_purchased = 'Camisole' THEN 'Tops'
+  WHEN item_purchased = 'Sweater' THEN 'Tops'
+  WHEN item_purchased = 'Hoodie' THEN 'Tops'
+  WHEN item_purchased = 'Cardigan' THEN 'Tops'
+  WHEN item_purchased = 'Vest' THEN 'Tops'
+  WHEN item_purchased = 'Jeans' THEN 'Bottoms'
+  WHEN item_purchased = 'Pants' THEN 'Bottoms'
+  WHEN item_purchased = 'Trousers' THEN 'Bottoms'
+  WHEN item_purchased = 'Shorts' THEN 'Bottoms'
+  WHEN item_purchased = 'Leggings' THEN 'Bottoms'
+  WHEN item_purchased = 'Skirt' THEN 'Bottoms'
+  WHEN item_purchased = 'Dress' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Jumpsuit' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Romper' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Overalls' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Pajamas' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Onesie' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Sneakers' THEN 'Footwear'
+  WHEN item_purchased = 'Boots' THEN 'Footwear'
+  WHEN item_purchased = 'Sandals' THEN 'Footwear'
+  WHEN item_purchased = 'Flip-Flops' THEN 'Footwear'
+  WHEN item_purchased = 'Loafers' THEN 'Footwear'
+  WHEN item_purchased = 'Slippers' THEN 'Footwear'
+  WHEN item_purchased = 'Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Sun Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Gloves' THEN 'Accessories'
+  WHEN item_purchased = 'Scarf' THEN 'Accessories'
+  WHEN item_purchased = 'Tie' THEN 'Accessories'
+  WHEN item_purchased = 'Bowtie' THEN 'Accessories'
+  WHEN item_purchased = 'Sunglasses' THEN 'Accessories'
+  WHEN item_purchased = 'Belt' THEN 'Accessories'
+  WHEN item_purchased = 'Umbrella' THEN 'Accessories'
+  WHEN item_purchased = 'Handbag' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Backpack' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Wallet' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Swimsuit' THEN 'Swimwear'
+  ELSE 'no category'
+END AS product_category
+FROM customer_purchases
+WHERE item_purchased IS NOT NULL AND purchase_amount_usd IS NOT NULL AND 
+  CASE
+  WHEN item_purchased = 'Jacket' THEN 'Outwear'
+  WHEN item_purchased = 'Trench Coat' THEN 'Outwear' 
+  WHEN item_purchased = 'Coat' THEN 'Outwear'
+  WHEN item_purchased = 'Raincoat' THEN 'Outwear'
+  WHEN item_purchased = 'Blazer' THEN 'Outwear'
+  WHEN item_purchased = 'Poncho' THEN 'Outwear'
+  WHEN item_purchased = 'Kimono' THEN 'Outwear'
+  WHEN item_purchased = 'T-shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tank Top' THEN 'Tops'
+  WHEN item_purchased = 'Blouse' THEN 'Tops'
+  WHEN item_purchased = 'Flannel Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Polo Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tunic' THEN 'Tops'
+  WHEN item_purchased = 'Camisole' THEN 'Tops'
+  WHEN item_purchased = 'Sweater' THEN 'Tops'
+  WHEN item_purchased = 'Hoodie' THEN 'Tops'
+  WHEN item_purchased = 'Cardigan' THEN 'Tops'
+  WHEN item_purchased = 'Vest' THEN 'Tops'
+  WHEN item_purchased = 'Jeans' THEN 'Bottoms'
+  WHEN item_purchased = 'Pants' THEN 'Bottoms'
+  WHEN item_purchased = 'Trousers' THEN 'Bottoms'
+  WHEN item_purchased = 'Shorts' THEN 'Bottoms'
+  WHEN item_purchased = 'Leggings' THEN 'Bottoms'
+  WHEN item_purchased = 'Skirt' THEN 'Bottoms'
+  WHEN item_purchased = 'Dress' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Jumpsuit' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Romper' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Overalls' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Pajamas' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Onesie' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Sneakers' THEN 'Footwear'
+  WHEN item_purchased = 'Boots' THEN 'Footwear'
+  WHEN item_purchased = 'Sandals' THEN 'Footwear'
+  WHEN item_purchased = 'Flip-Flops' THEN 'Footwear'
+  WHEN item_purchased = 'Loafers' THEN 'Footwear'
+  WHEN item_purchased = 'Slippers' THEN 'Footwear'
+  WHEN item_purchased = 'Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Sun Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Gloves' THEN 'Accessories'
+  WHEN item_purchased = 'Scarf' THEN 'Accessories'
+  WHEN item_purchased = 'Tie' THEN 'Accessories'
+  WHEN item_purchased = 'Bowtie' THEN 'Accessories'
+  WHEN item_purchased = 'Sunglasses' THEN 'Accessories'
+  WHEN item_purchased = 'Belt' THEN 'Accessories'
+  WHEN item_purchased = 'Umbrella' THEN 'Accessories'
+  WHEN item_purchased = 'Handbag' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Backpack' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Wallet' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Swimsuit' THEN 'Swimwear'
+  ELSE 'no category'
+END = 'Footwear'
+GROUP BY product_category, EXTRACT(MONTH from date_purchase)
+ORDER BY SUM(purchase_amount_usd) DESC
+
+-- Peak June 11237, Lowest May 1531
+
+
+
+--Accessories
+SELECT EXTRACT(MONTH from date_purchase) AS month, SUM(purchase_amount_usd) AS total_sales,
+
+  CASE
+  WHEN item_purchased = 'Jacket' THEN 'Outwear'
+  WHEN item_purchased = 'Trench Coat' THEN 'Outwear' 
+  WHEN item_purchased = 'Coat' THEN 'Outwear'
+  WHEN item_purchased = 'Raincoat' THEN 'Outwear'
+  WHEN item_purchased = 'Blazer' THEN 'Outwear'
+  WHEN item_purchased = 'Poncho' THEN 'Outwear'
+  WHEN item_purchased = 'Kimono' THEN 'Outwear'
+  WHEN item_purchased = 'T-shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tank Top' THEN 'Tops'
+  WHEN item_purchased = 'Blouse' THEN 'Tops'
+  WHEN item_purchased = 'Flannel Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Polo Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tunic' THEN 'Tops'
+  WHEN item_purchased = 'Camisole' THEN 'Tops'
+  WHEN item_purchased = 'Sweater' THEN 'Tops'
+  WHEN item_purchased = 'Hoodie' THEN 'Tops'
+  WHEN item_purchased = 'Cardigan' THEN 'Tops'
+  WHEN item_purchased = 'Vest' THEN 'Tops'
+  WHEN item_purchased = 'Jeans' THEN 'Bottoms'
+  WHEN item_purchased = 'Pants' THEN 'Bottoms'
+  WHEN item_purchased = 'Trousers' THEN 'Bottoms'
+  WHEN item_purchased = 'Shorts' THEN 'Bottoms'
+  WHEN item_purchased = 'Leggings' THEN 'Bottoms'
+  WHEN item_purchased = 'Skirt' THEN 'Bottoms'
+  WHEN item_purchased = 'Dress' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Jumpsuit' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Romper' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Overalls' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Pajamas' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Onesie' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Sneakers' THEN 'Footwear'
+  WHEN item_purchased = 'Boots' THEN 'Footwear'
+  WHEN item_purchased = 'Sandals' THEN 'Footwear'
+  WHEN item_purchased = 'Flip-Flops' THEN 'Footwear'
+  WHEN item_purchased = 'Loafers' THEN 'Footwear'
+  WHEN item_purchased = 'Slippers' THEN 'Footwear'
+  WHEN item_purchased = 'Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Sun Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Gloves' THEN 'Accessories'
+  WHEN item_purchased = 'Scarf' THEN 'Accessories'
+  WHEN item_purchased = 'Tie' THEN 'Accessories'
+  WHEN item_purchased = 'Bowtie' THEN 'Accessories'
+  WHEN item_purchased = 'Sunglasses' THEN 'Accessories'
+  WHEN item_purchased = 'Belt' THEN 'Accessories'
+  WHEN item_purchased = 'Umbrella' THEN 'Accessories'
+  WHEN item_purchased = 'Handbag' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Backpack' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Wallet' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Swimsuit' THEN 'Swimwear'
+  ELSE 'no category'
+END AS product_category
+FROM customer_purchases
+WHERE item_purchased IS NOT NULL AND purchase_amount_usd IS NOT NULL AND 
+  CASE
+  WHEN item_purchased = 'Jacket' THEN 'Outwear'
+  WHEN item_purchased = 'Trench Coat' THEN 'Outwear' 
+  WHEN item_purchased = 'Coat' THEN 'Outwear'
+  WHEN item_purchased = 'Raincoat' THEN 'Outwear'
+  WHEN item_purchased = 'Blazer' THEN 'Outwear'
+  WHEN item_purchased = 'Poncho' THEN 'Outwear'
+  WHEN item_purchased = 'Kimono' THEN 'Outwear'
+  WHEN item_purchased = 'T-shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tank Top' THEN 'Tops'
+  WHEN item_purchased = 'Blouse' THEN 'Tops'
+  WHEN item_purchased = 'Flannel Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Polo Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tunic' THEN 'Tops'
+  WHEN item_purchased = 'Camisole' THEN 'Tops'
+  WHEN item_purchased = 'Sweater' THEN 'Tops'
+  WHEN item_purchased = 'Hoodie' THEN 'Tops'
+  WHEN item_purchased = 'Cardigan' THEN 'Tops'
+  WHEN item_purchased = 'Vest' THEN 'Tops'
+  WHEN item_purchased = 'Jeans' THEN 'Bottoms'
+  WHEN item_purchased = 'Pants' THEN 'Bottoms'
+  WHEN item_purchased = 'Trousers' THEN 'Bottoms'
+  WHEN item_purchased = 'Shorts' THEN 'Bottoms'
+  WHEN item_purchased = 'Leggings' THEN 'Bottoms'
+  WHEN item_purchased = 'Skirt' THEN 'Bottoms'
+  WHEN item_purchased = 'Dress' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Jumpsuit' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Romper' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Overalls' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Pajamas' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Onesie' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Sneakers' THEN 'Footwear'
+  WHEN item_purchased = 'Boots' THEN 'Footwear'
+  WHEN item_purchased = 'Sandals' THEN 'Footwear'
+  WHEN item_purchased = 'Flip-Flops' THEN 'Footwear'
+  WHEN item_purchased = 'Loafers' THEN 'Footwear'
+  WHEN item_purchased = 'Slippers' THEN 'Footwear'
+  WHEN item_purchased = 'Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Sun Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Gloves' THEN 'Accessories'
+  WHEN item_purchased = 'Scarf' THEN 'Accessories'
+  WHEN item_purchased = 'Tie' THEN 'Accessories'
+  WHEN item_purchased = 'Bowtie' THEN 'Accessories'
+  WHEN item_purchased = 'Sunglasses' THEN 'Accessories'
+  WHEN item_purchased = 'Belt' THEN 'Accessories'
+  WHEN item_purchased = 'Umbrella' THEN 'Accessories'
+  WHEN item_purchased = 'Handbag' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Backpack' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Wallet' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Swimsuit' THEN 'Swimwear'
+  ELSE 'no category'
+END = 'Accessories'
+GROUP BY product_category, EXTRACT(MONTH from date_purchase)
+ORDER BY SUM(purchase_amount_usd) DESC
+
+--Peak May 10785, Lowest September 2590
+
+
+--Swimwear
+SELECT EXTRACT(MONTH from date_purchase) AS month, SUM(purchase_amount_usd) AS total_sales,
+
+  CASE
+  WHEN item_purchased = 'Jacket' THEN 'Outwear'
+  WHEN item_purchased = 'Trench Coat' THEN 'Outwear' 
+  WHEN item_purchased = 'Coat' THEN 'Outwear'
+  WHEN item_purchased = 'Raincoat' THEN 'Outwear'
+  WHEN item_purchased = 'Blazer' THEN 'Outwear'
+  WHEN item_purchased = 'Poncho' THEN 'Outwear'
+  WHEN item_purchased = 'Kimono' THEN 'Outwear'
+  WHEN item_purchased = 'T-shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tank Top' THEN 'Tops'
+  WHEN item_purchased = 'Blouse' THEN 'Tops'
+  WHEN item_purchased = 'Flannel Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Polo Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tunic' THEN 'Tops'
+  WHEN item_purchased = 'Camisole' THEN 'Tops'
+  WHEN item_purchased = 'Sweater' THEN 'Tops'
+  WHEN item_purchased = 'Hoodie' THEN 'Tops'
+  WHEN item_purchased = 'Cardigan' THEN 'Tops'
+  WHEN item_purchased = 'Vest' THEN 'Tops'
+  WHEN item_purchased = 'Jeans' THEN 'Bottoms'
+  WHEN item_purchased = 'Pants' THEN 'Bottoms'
+  WHEN item_purchased = 'Trousers' THEN 'Bottoms'
+  WHEN item_purchased = 'Shorts' THEN 'Bottoms'
+  WHEN item_purchased = 'Leggings' THEN 'Bottoms'
+  WHEN item_purchased = 'Skirt' THEN 'Bottoms'
+  WHEN item_purchased = 'Dress' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Jumpsuit' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Romper' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Overalls' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Pajamas' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Onesie' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Sneakers' THEN 'Footwear'
+  WHEN item_purchased = 'Boots' THEN 'Footwear'
+  WHEN item_purchased = 'Sandals' THEN 'Footwear'
+  WHEN item_purchased = 'Flip-Flops' THEN 'Footwear'
+  WHEN item_purchased = 'Loafers' THEN 'Footwear'
+  WHEN item_purchased = 'Slippers' THEN 'Footwear'
+  WHEN item_purchased = 'Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Sun Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Gloves' THEN 'Accessories'
+  WHEN item_purchased = 'Scarf' THEN 'Accessories'
+  WHEN item_purchased = 'Tie' THEN 'Accessories'
+  WHEN item_purchased = 'Bowtie' THEN 'Accessories'
+  WHEN item_purchased = 'Sunglasses' THEN 'Accessories'
+  WHEN item_purchased = 'Belt' THEN 'Accessories'
+  WHEN item_purchased = 'Umbrella' THEN 'Accessories'
+  WHEN item_purchased = 'Handbag' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Backpack' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Wallet' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Swimsuit' THEN 'Swimwear'
+  ELSE 'no category'
+END AS product_category
+FROM customer_purchases
+WHERE item_purchased IS NOT NULL AND purchase_amount_usd IS NOT NULL AND 
+  CASE
+  WHEN item_purchased = 'Jacket' THEN 'Outwear'
+  WHEN item_purchased = 'Trench Coat' THEN 'Outwear' 
+  WHEN item_purchased = 'Coat' THEN 'Outwear'
+  WHEN item_purchased = 'Raincoat' THEN 'Outwear'
+  WHEN item_purchased = 'Blazer' THEN 'Outwear'
+  WHEN item_purchased = 'Poncho' THEN 'Outwear'
+  WHEN item_purchased = 'Kimono' THEN 'Outwear'
+  WHEN item_purchased = 'T-shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tank Top' THEN 'Tops'
+  WHEN item_purchased = 'Blouse' THEN 'Tops'
+  WHEN item_purchased = 'Flannel Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Polo Shirt' THEN 'Tops'
+  WHEN item_purchased = 'Tunic' THEN 'Tops'
+  WHEN item_purchased = 'Camisole' THEN 'Tops'
+  WHEN item_purchased = 'Sweater' THEN 'Tops'
+  WHEN item_purchased = 'Hoodie' THEN 'Tops'
+  WHEN item_purchased = 'Cardigan' THEN 'Tops'
+  WHEN item_purchased = 'Vest' THEN 'Tops'
+  WHEN item_purchased = 'Jeans' THEN 'Bottoms'
+  WHEN item_purchased = 'Pants' THEN 'Bottoms'
+  WHEN item_purchased = 'Trousers' THEN 'Bottoms'
+  WHEN item_purchased = 'Shorts' THEN 'Bottoms'
+  WHEN item_purchased = 'Leggings' THEN 'Bottoms'
+  WHEN item_purchased = 'Skirt' THEN 'Bottoms'
+  WHEN item_purchased = 'Dress' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Jumpsuit' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Romper' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Overalls' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Pajamas' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Onesie' THEN 'One-Piece Outfits'
+  WHEN item_purchased = 'Sneakers' THEN 'Footwear'
+  WHEN item_purchased = 'Boots' THEN 'Footwear'
+  WHEN item_purchased = 'Sandals' THEN 'Footwear'
+  WHEN item_purchased = 'Flip-Flops' THEN 'Footwear'
+  WHEN item_purchased = 'Loafers' THEN 'Footwear'
+  WHEN item_purchased = 'Slippers' THEN 'Footwear'
+  WHEN item_purchased = 'Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Sun Hat' THEN 'Accessories'
+  WHEN item_purchased = 'Gloves' THEN 'Accessories'
+  WHEN item_purchased = 'Scarf' THEN 'Accessories'
+  WHEN item_purchased = 'Tie' THEN 'Accessories'
+  WHEN item_purchased = 'Bowtie' THEN 'Accessories'
+  WHEN item_purchased = 'Sunglasses' THEN 'Accessories'
+  WHEN item_purchased = 'Belt' THEN 'Accessories'
+  WHEN item_purchased = 'Umbrella' THEN 'Accessories'
+  WHEN item_purchased = 'Handbag' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Backpack' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Wallet' THEN 'Bags and Wallets'
+  WHEN item_purchased = 'Swimsuit' THEN 'Swimwear'
+  ELSE 'no category'
+END = 'Swimwear'
+GROUP BY product_category, EXTRACT(MONTH from date_purchase)
+ORDER BY SUM(purchase_amount_usd) DESC
+
+-- Peak February 3640, Lowest May 167
+
+
+
+--Is there a recurring pattern in sales over the years during the same months (e.g., is December always high)?
+
+--to check whether or not theres even a january 2022 
+SELECT MIN(date_purchase), MAX(date_purchase)
+FROM customer_purchases;
+
+WITH October2022 AS (
+  SELECT TO_CHAR(date_purchase, 'MM-YYYY') AS month_year, SUM(purchase_amount_usd) AS total_sales
+  FROM customer_purchases
+  WHERE TO_CHAR(date_purchase, 'MM-YYYY') = '10-2022' 
+  GROUP BY TO_CHAR(date_purchase, 'MM-YYYY')
+)
+
+SELECT * 
+FROM October2022
+-- its correct but this will take forever 
+
+
+SELECT 
+  TO_CHAR(date_purchase, 'Month') AS month,
+  SUM(CASE WHEN EXTRACT(YEAR FROM date_purchase) = 2022 THEN purchase_amount_usd ELSE 0 END) AS total_sales2022,
+  SUM(CASE WHEN EXTRACT(YEAR FROM date_purchase) = 2023 THEN purchase_amount_usd ELSE 0 END) AS total_sales_2023
+
+FROM customer_purchases
+GROUP BY TO_CHAR(date_purchase, 'Month'), EXTRACT(MONTH FROM date_purchase)
+ORDER BY EXTRACT(MONTH FROM date_purchase);
+/*
+Verdict:
+A clear year-over-year pattern in monthly sales cannot be reliably identified because the dataset lacks full-year data for either 2022 or 2023. Most months have data for only one of the two years, making it difficult to assess whether specific months (e.g., December) consistently exhibit higher sales. For instance, while December 2022 shows strong performance, there’s no corresponding data for December 2023 to compare. Therefore, more complete, multi-year data is needed to identify recurring sales trends across the same months.
+*/
+
+
+--Which fashion items perform best during specific seasons?
+
+WITH springsummer AS (
+  SELECT 
+  customer_reference_id,
+  item_purchased,
+  purchase_amount_usd,
+  TO_CHAR(date_purchase, 'Month-YYYY') AS date,
+  review_rating,
+  payment_method
+
+  FROM customer_purchases
+  WHERE EXTRACT(MONTH FROM date_purchase) BETWEEN '1' AND '6'
+)
+
+SELECT *
+FROM springsummer
+
+WITH winterfall AS (
+  SELECT 
+  customer_reference_id,
+  item_purchased,
+  purchase_amount_usd,
+  TO_CHAR(date_purchase, 'Month-YYYY') AS date,
+  review_rating,
+  payment_method
+
+  FROM customer_purchases
+  WHERE EXTRACT(MONTH FROM date_purchase) BETWEEN '7' AND '12'
+)
+
+SELECT *
+FROM winterfall
+
+WITH resortcruise AS (
+  SELECT 
+  customer_reference_id,
+  item_purchased,
+  purchase_amount_usd,
+  TO_CHAR(date_purchase, 'Month-YYYY') AS date,
+  review_rating,
+  payment_method
+
+  FROM customer_purchases
+  WHERE 
+  EXTRACT(MONTH FROM date_purchase) = '11' AND EXTRACT(YEAR FROM date_purchase) = '2022' OR
+  EXTRACT(MONTH FROM date_purchase) = '12' AND EXTRACT(YEAR FROM date_purchase) = '2022' OR
+  EXTRACT(MONTH FROM date_purchase) = '1' AND EXTRACT(YEAR FROM date_purchase) = '2023'
+)
+SELECT *
+FROM resortcruise
+
+
+WITH prefall AS (
+  SELECT 
+  customer_reference_id,
+  item_purchased,
+  purchase_amount_usd,
+  TO_CHAR(date_purchase, 'Month-YYYY') AS date,
+  review_rating,
+  payment_method
+
+  FROM customer_purchases
+  WHERE 
+  EXTRACT(MONTH FROM date_purchase) BETWEEN '5' AND '7'
+)
+SELECT *
+FROM prefall
+
+
+
+
+
+Resort/Cruise:
+Generally presented in November-January, this collection features vacation-ready clothing and is often seen during the resort season.
+Pre-Fall:
+May-July, a collection that bridges the gap between Spring/Summer and Fall/Winter with lighter takes on fall trends.
