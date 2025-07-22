@@ -1,0 +1,18 @@
+--Is there a recurring pattern in sales over the years during the same months (e.g., is December always high)?
+
+--to check whether or not theres even a january 2022 
+SELECT MIN(date_purchase), MAX(date_purchase)
+FROM customer_purchases;
+
+SELECT 
+  TO_CHAR(date_purchase, 'Month') AS month,
+  SUM(CASE WHEN EXTRACT(YEAR FROM date_purchase) = 2022 THEN purchase_amount_usd ELSE 0 END) AS total_sales2022,
+  SUM(CASE WHEN EXTRACT(YEAR FROM date_purchase) = 2023 THEN purchase_amount_usd ELSE 0 END) AS total_sales_2023
+
+FROM customer_purchases
+GROUP BY TO_CHAR(date_purchase, 'Month'), EXTRACT(MONTH FROM date_purchase)
+ORDER BY EXTRACT(MONTH FROM date_purchase);
+/*
+Verdict:
+A clear year-over-year pattern in monthly sales cannot be reliably identified because the dataset lacks full-year data for either 2022 or 2023. Most months have data for only one of the two years, making it difficult to assess whether specific months (e.g., December) consistently exhibit higher sales. For instance, while December 2022 shows strong performance, there’s no corresponding data for December 2023 to compare. Therefore, more complete, multi-year data is needed to identify recurring sales trends across the same months.
+*/

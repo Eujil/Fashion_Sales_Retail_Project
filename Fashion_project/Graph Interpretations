@@ -1,0 +1,145 @@
+/*  I want to know in the category like example in top, i know it peaked 
+ March 2023 and December 2022 but i want to know what type of tops were in 
+ those months so that i can interpret if it makes sense like example
+ 
+ i want to see the months and what tops where purchased there*/
+
+
+--outwear
+SELECT TO_CHAR(date_purchase, 'Month-YYYY') AS date, item_purchased, SUM(purchase_amount_usd) AS amount
+FROM customer_purchases
+WHERE EXTRACT(MONTH FROM date_purchase) = 5
+AND item_purchased IN ('Jacket', 'Trench Coat', 'Coat', 'Raincoat', 'Blazer', 'Poncho', 'Kimono')
+GROUP BY TO_CHAR(date_purchase, 'Month-YYYY'), item_purchased
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+--tops
+
+SELECT TO_CHAR(date_purchase, 'Month-YYYY') AS date, item_purchased, SUM(purchase_amount_usd) AS amount
+FROM customer_purchases
+WHERE EXTRACT(MONTH FROM date_purchase) = 3 
+AND item_purchased IN ('T-Shirt', 'Tank Top', 'Blouse', 'Flannel Shirt', 'Polo Shirt', 'Tunic', 'Camisole', 'Sweater', 'Hoodie', 'Cardigan', 'Vest')
+GROUP BY TO_CHAR(date_purchase, 'Month-YYYY'), item_purchased
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+
+SELECT TO_CHAR(date_purchase, 'Month-YYYY') AS date, item_purchased, SUM(purchase_amount_usd) AS amount
+FROM customer_purchases
+WHERE EXTRACT(MONTH FROM date_purchase) = 7
+AND item_purchased IN ('T-Shirt', 'Tank Top', 'Blouse', 'Flannel Shirt', 'Polo Shirt', 'Tunic', 'Camisole', 'Sweater', 'Hoodie', 'Cardigan', 'Vest')
+GROUP BY TO_CHAR(date_purchase, 'Month-YYYY'), item_purchased
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+SELECT TO_CHAR(date_purchase, 'Month-YYYY') AS date, item_purchased, SUM(purchase_amount_usd) AS amount
+FROM customer_purchases
+WHERE EXTRACT(MONTH FROM date_purchase) = 12
+AND item_purchased IN ('T-Shirt', 'Tank Top', 'Blouse', 'Flannel Shirt', 'Polo Shirt', 'Tunic', 'Camisole', 'Sweater', 'Hoodie', 'Cardigan', 'Vest')
+GROUP BY TO_CHAR(date_purchase, 'Month-YYYY'), item_purchased
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+
+--Bottoms
+SELECT TO_CHAR(date_purchase, 'Month-YYYY') AS date, item_purchased, SUM(purchase_amount_usd) AS amount
+FROM customer_purchases
+WHERE EXTRACT(MONTH FROM date_purchase) = 5 
+AND item_purchased IN ('Jeans', 'Pants', 'Trousers', 'Shorts', 'Leggings', 'Skirt')
+GROUP BY TO_CHAR(date_purchase, 'Month-YYYY'), item_purchased
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+SELECT TO_CHAR(date_purchase, 'Month-YYYY') AS date, item_purchased, SUM(purchase_amount_usd) AS amount
+FROM customer_purchases
+WHERE EXTRACT(MONTH FROM date_purchase) = 8 
+AND item_purchased IN ('Jeans', 'Pants', 'Trousers', 'Shorts', 'Leggings', 'Skirt')
+GROUP BY TO_CHAR(date_purchase, 'Month-YYYY'), item_purchased
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+-- One-Piece Outfits
+SELECT TO_CHAR(date_purchase, 'Month-YYYY') AS date, item_purchased, SUM(purchase_amount_usd) AS amount
+FROM customer_purchases
+WHERE EXTRACT(MONTH FROM date_purchase) = 12
+AND item_purchased IN ('Dress', 'Jumpsuit', 'Romper', 'Overalls', 'Pajamas', 'Onesie')
+GROUP BY TO_CHAR(date_purchase, 'Month-YYYY'), item_purchased
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+SELECT TO_CHAR(date_purchase, 'Month-YYYY') AS date, item_purchased, SUM(purchase_amount_usd) AS amount
+FROM customer_purchases
+WHERE EXTRACT(MONTH FROM date_purchase) BETWEEN 1 AND 10
+AND item_purchased IN ('Dress', 'Jumpsuit', 'Romper', 'Overalls', 'Pajamas', 'Onesie')
+GROUP BY TO_CHAR(date_purchase, 'Month-YYYY'), item_purchased
+HAVING SUM(purchase_amount_usd) IS NOT NULL
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+SELECT COUNT(item_purchased) AS count, item_purchased
+FROM customer_purchases
+WHERE EXTRACT(MONTH FROM date_purchase) BETWEEN 1 AND 10
+AND item_purchased IN ('Dress', 'Jumpsuit', 'Romper', 'Overalls', 'Pajamas', 'Onesie')
+GROUP BY item_purchased
+ORDER BY COUNT(item_purchased);
+
+--Footwear
+SELECT TO_CHAR(date_purchase, 'Month-YYYY') AS date, item_purchased, SUM(purchase_amount_usd) AS amount
+FROM customer_purchases
+WHERE EXTRACT(MONTH FROM date_purchase) = 12
+AND item_purchased IN ('Sneakers', 'Boots', 'Sandals', 'Flip-Flops', 'Loafers', 'Slippers')
+GROUP BY TO_CHAR(date_purchase, 'Month-YYYY'), item_purchased
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+SELECT TO_CHAR(date_purchase, 'Month-YYYY') AS date, item_purchased, SUM(purchase_amount_usd) AS amount
+FROM customer_purchases
+WHERE EXTRACT(MONTH FROM date_purchase) = 6
+AND item_purchased IN ('Sneakers', 'Boots', 'Sandals', 'Flip-Flops', 'Loafers', 'Slippers')
+GROUP BY TO_CHAR(date_purchase, 'Month-YYYY'), item_purchased
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+
+-- Accessories
+SELECT TO_CHAR(date_purchase, 'Month-YYYY') AS date, item_purchased, SUM(purchase_amount_usd) AS amount
+FROM customer_purchases
+WHERE EXTRACT(MONTH FROM date_purchase) = 11
+AND item_purchased IN ('Hat', 'Sun Hat', 'Gloves', 'Scarf', 'Tie', 'Bowtie', 'Sunglasses', 'Belt', 'Umbrella')
+GROUP BY TO_CHAR(date_purchase, 'Month-YYYY'), item_purchased
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+SELECT TO_CHAR(date_purchase, 'Month-YYYY') AS date, item_purchased, SUM(purchase_amount_usd) AS amount
+FROM customer_purchases
+WHERE EXTRACT(MONTH FROM date_purchase) = 5
+AND item_purchased IN ('Hat', 'Sun Hat', 'Gloves', 'Scarf', 'Tie', 'Bowtie', 'Sunglasses', 'Belt', 'Umbrella')
+GROUP BY TO_CHAR(date_purchase, 'Month-YYYY'), item_purchased
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+SELECT TO_CHAR(date_purchase, 'Month-YYYY') AS date, item_purchased, SUM(purchase_amount_usd) AS amount
+FROM customer_purchases
+WHERE EXTRACT(MONTH FROM date_purchase) = 7
+AND item_purchased IN ('Hat', 'Sun Hat', 'Gloves', 'Scarf', 'Tie', 'Bowtie', 'Sunglasses', 'Belt', 'Umbrella')
+GROUP BY TO_CHAR(date_purchase, 'Month-YYYY'), item_purchased
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+-- Bags and Wallets
+SELECT TO_CHAR(date_purchase, 'Month-YYYY') AS date, item_purchased, SUM(purchase_amount_usd) AS amount
+FROM customer_purchases
+WHERE EXTRACT(MONTH FROM date_purchase) = 11
+AND item_purchased IN ('Handbag', 'Backpack', 'Wallet')
+GROUP BY TO_CHAR(date_purchase, 'Month-YYYY'), item_purchased
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+SELECT TO_CHAR(date_purchase, 'Month-YYYY') AS date, item_purchased, SUM(purchase_amount_usd) AS amount
+FROM customer_purchases
+WHERE EXTRACT(MONTH FROM date_purchase) = 1
+AND item_purchased IN ('Handbag', 'Backpack', 'Wallet')
+GROUP BY TO_CHAR(date_purchase, 'Month-YYYY'), item_purchased
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+SELECT TO_CHAR(date_purchase, 'Month-YYYY') AS date, item_purchased, SUM(purchase_amount_usd) AS amount
+FROM customer_purchases
+WHERE EXTRACT(MONTH FROM date_purchase) = 8
+AND item_purchased IN ('Handbag', 'Backpack', 'Wallet')
+GROUP BY TO_CHAR(date_purchase, 'Month-YYYY'), item_purchased
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+--Swimwear
+SELECT TO_CHAR(date_purchase, 'Month-YYYY') AS date, item_purchased, SUM(purchase_amount_usd) AS amount
+FROM customer_purchases
+WHERE EXTRACT(MONTH FROM date_purchase) = 2
+AND item_purchased IN ('Swimsuit')
+GROUP BY TO_CHAR(date_purchase, 'Month-YYYY'), item_purchased
+ORDER BY SUM(purchase_amount_usd) DESC;

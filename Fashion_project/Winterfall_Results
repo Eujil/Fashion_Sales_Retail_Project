@@ -1,0 +1,112 @@
+--For Tunics
+
+SELECT 
+    SUM(purchase_amount_usd) AS tunic_sales, 
+    EXTRACT(YEAR FROM date_purchase) AS year,
+    EXTRACT(MONTH FROM date_purchase) AS month
+
+FROM customer_purchases
+
+WHERE 
+    item_purchased = 'Tunic' AND 
+    EXTRACT(YEAR FROM date_purchase) = 2023
+
+GROUP BY 
+    EXTRACT(MONTH FROM date_purchase),
+    EXTRACT(YEAR FROM date_purchase);
+
+
+SELECT 
+    SUM(purchase_amount_usd) AS tunic_sales, 
+    EXTRACT(YEAR FROM date_purchase) AS year,
+    EXTRACT(MONTH FROM date_purchase) AS month
+
+FROM customer_purchases
+
+WHERE 
+    item_purchased = 'Tunic' AND 
+    EXTRACT(YEAR FROM date_purchase) = 2022
+
+GROUP BY 
+    EXTRACT(MONTH FROM date_purchase),
+    EXTRACT(YEAR FROM date_purchase);
+
+SELECT SUM(purchase_amount_usd) AS tunic_sales 
+FROM customer_purchases
+WHERE item_purchased = 'Tunic';
+
+
+
+-- For FlipFlops
+SELECT 
+    SUM(purchase_amount_usd) AS tunic_sales, 
+    EXTRACT(YEAR FROM date_purchase) AS year,
+    EXTRACT(MONTH FROM date_purchase) AS month
+
+FROM customer_purchases
+
+WHERE 
+    item_purchased = 'Flip-Flops' AND 
+    EXTRACT(YEAR FROM date_purchase) = 2023
+
+GROUP BY 
+    EXTRACT(MONTH FROM date_purchase),
+    EXTRACT(YEAR FROM date_purchase);
+
+
+SELECT 
+    SUM(purchase_amount_usd) AS tunic_sales, 
+    EXTRACT(YEAR FROM date_purchase) AS year,
+    EXTRACT(MONTH FROM date_purchase) AS month
+
+FROM customer_purchases
+
+WHERE 
+    item_purchased = 'Flip-Flops' AND 
+    EXTRACT(YEAR FROM date_purchase) = 2022
+
+GROUP BY 
+    EXTRACT(MONTH FROM date_purchase),
+    EXTRACT(YEAR FROM date_purchase);
+
+SELECT SUM(purchase_amount_usd) AS tunic_sales 
+FROM customer_purchases
+WHERE item_purchased = 'Flip-Flops';
+
+
+
+-- For Shorts
+SELECT 
+    SUM(purchase_amount_usd) AS tunic_sales, 
+    EXTRACT(YEAR FROM date_purchase) AS year,
+    EXTRACT(MONTH FROM date_purchase) AS month
+
+FROM customer_purchases
+
+WHERE 
+    item_purchased = 'Shorts' AND 
+    EXTRACT(YEAR FROM date_purchase) = 2023
+
+GROUP BY 
+    EXTRACT(MONTH FROM date_purchase),
+    EXTRACT(YEAR FROM date_purchase);
+
+
+SELECT 
+    SUM(purchase_amount_usd) AS tunic_sales, 
+    EXTRACT(YEAR FROM date_purchase) AS year,
+    EXTRACT(MONTH FROM date_purchase) AS month
+
+FROM customer_purchases
+
+WHERE 
+    item_purchased = 'Shorts' AND 
+    EXTRACT(YEAR FROM date_purchase) = 2022
+
+GROUP BY 
+    EXTRACT(MONTH FROM date_purchase),
+    EXTRACT(YEAR FROM date_purchase);
+
+SELECT SUM(purchase_amount_usd) AS tunic_sales 
+FROM customer_purchases 
+WHERE item_purchased = 'Shorts';

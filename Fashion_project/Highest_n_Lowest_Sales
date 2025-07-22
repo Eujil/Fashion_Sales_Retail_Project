@@ -1,0 +1,29 @@
+--Which months have the highest and lowest sales overall?
+
+
+SELECT 
+    EXTRACT(YEAR FROM date_purchase) AS year,
+    EXTRACT(MONTH from date_purchase) AS month,
+    SUM(purchase_amount_usd) AS total_sales
+
+FROM customer_purchases
+GROUP BY EXTRACT(MONTH from date_purchase), EXTRACT(YEAR FROM date_purchase) 
+HAVING EXTRACT(YEAR FROM date_purchase) = '2022'
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+--in the year 2022 Highest: December with 46851 Lowest: October with 30812
+
+SELECT 
+    EXTRACT(YEAR FROM date_purchase) AS year,
+    EXTRACT(MONTH from date_purchase) AS month,
+    SUM(purchase_amount_usd) AS total_sales
+
+FROM customer_purchases
+GROUP BY EXTRACT(MONTH from date_purchase), EXTRACT(YEAR FROM date_purchase) 
+HAVING EXTRACT(YEAR FROM date_purchase) = '2023'
+ORDER BY SUM(purchase_amount_usd) DESC;
+
+--in the year 2023 Highest: May with 45352 Lowest: October with 423
+
+
+ 
